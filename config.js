@@ -29,4 +29,5 @@ const FIREBASE_CONFIG = {
 //    "Patatas bravas",
 //    "Gambas al ajillo",
 const FORSLAG = [
+  "Focaccia",
 ];
