@@ -31,4 +31,5 @@ const FIREBASE_CONFIG = {
 const FORSLAG = [
   "Focaccia",
   "Ostefat",
+  "Kjøttboller i tomatsaus",
 ];
