@@ -1,159 +1,399 @@
-// Leser innholdet fra data.js (variabelen JULEBORD) og bygger siden.
-// Du trenger normalt ikke endre denne filen.
+// Logikken for siden. Innstillinger og tekster ligger i config.js.
+// Firebase lastes fra Googles CDN – ingen installasjon nødvendig.
 
-(function () {
-  "use strict";
+const FIREBASE_VERSJON = "10.12.2";
+const MAKS_NAVN = 40;  // må stemme med database.rules.json
+const MAKS_RETT = 60;  // må stemme med database.rules.json
 
-  const data = JULEBORD;
-  const SNART_DAGER = 7; // Frister innen så mange dager markeres som "snart"
+const $ = (id) => document.getElementById(id);
 
-  const datoFormat = new Intl.DateTimeFormat("nb-NO", { day: "numeric", month: "long", year: "numeric" });
-  const kortDato = new Intl.DateTimeFormat("nb-NO", { day: "numeric", month: "short" });
+function el(tag, klasse, tekst) {
+  const e = document.createElement(tag);
+  if (klasse) e.className = klasse;
+  if (tekst != null) e.textContent = tekst;
+  return e;
+}
 
-  // Tolker "ÅÅÅÅ-MM-DD" som lokal dato (unngår tidssoneforskyvning).
-  function tilDato(str) {
-    const [a, m, d] = String(str).split("-").map(Number);
-    return new Date(a, (m || 1) - 1, d || 1);
+const kategoriFraId = Object.fromEntries(KATEGORIER.map((k) => [k.id, k]));
+const allergenNavn = Object.fromEntries(ALLERGENER.map((a) => [a.id, a.navn]));
+
+let db = null;
+let fb = null;            // Firebase-funksjoner (ref, set, remove)
+let minUid = null;        // Anonym ID for denne nettleseren
+let tilkoblet = false;
+let pameldinger = {};     // uid -> { navn, rett, kategori, allergener }
+
+// ---------------------------------------------------------------------
+//  Sammenligning av retter
+// ---------------------------------------------------------------------
+
+// Gjør "Patatas Bravas  " og "patata brava" like: små bokstaver, uten
+// aksenter/tegnsetting, ett mellomrom, og enkle flertalls-/bøyningsendelser fjernet.
+function normaliser(tekst) {
+  return String(tekst || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9æø\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(stamme)
+    .join(" ");
+}
+
+function stamme(ord) {
+  if (ord.length <= 4) return ord;
+  for (const endelse of ["ene", "er", "en", "s", "e"]) {
+    if (ord.endsWith(endelse) && ord.length - endelse.length >= 3) {
+      return ord.slice(0, -endelse.length);
+    }
   }
+  return ord;
+}
 
-  function idag() {
-    const n = new Date();
-    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+function finnTatt(rett) {
+  const n = normaliser(rett);
+  if (!n) return null;
+  for (const [uid, p] of Object.entries(pameldinger)) {
+    if (normaliser(p.rett) === n) return { uid, ...p };
   }
+  return null;
+}
 
-  function dagerTil(dato) {
-    return Math.round((dato - idag()) / 86400000);
+// ---------------------------------------------------------------------
+//  Toppfelt og nedtelling
+// ---------------------------------------------------------------------
+
+function lesDato() {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(JULEBORD.dato || "");
+  if (!d) return null;
+  const t = /^(\d{1,2})[:.](\d{2})$/.exec(JULEBORD.tid || "") || [null, "18", "00"];
+  return new Date(+d[1], +d[2] - 1, +d[3], +t[1], +t[2]);
+}
+
+function visInfo() {
+  document.title = JULEBORD.tittel;
+  $("tittel").textContent = JULEBORD.tittel;
+  $("intro").textContent = JULEBORD.intro || "";
+  const dato = lesDato();
+  $("info-dato").textContent = dato
+    ? new Intl.DateTimeFormat("nb-NO", { weekday: "long", day: "numeric", month: "long" }).format(dato)
+    : JULEBORD.dato;
+  $("info-tid").textContent = JULEBORD.tid;
+  $("info-sted").textContent = JULEBORD.sted;
+  oppdaterNedtelling();
+  setInterval(oppdaterNedtelling, 30000);
+}
+
+function oppdaterNedtelling() {
+  const boks = $("nedtelling");
+  const maal = lesDato();
+  if (!maal) {
+    boks.textContent = "Nedtellingen starter når datoen er satt.";
+    return;
   }
-
-  function el(tag, klasse, tekst) {
-    const e = document.createElement(tag);
-    if (klasse) e.className = klasse;
-    if (tekst != null) e.textContent = tekst;
-    return e;
+  const ms = maal - Date.now();
+  if (ms <= 0) {
+    boks.textContent = ms > -12 * 3600e3 ? "Det er julebord nå! 🎄" : "Julebordet er over – takk for sist! ✨";
+    return;
   }
+  const min = Math.floor(ms / 60000);
+  const deler = [
+    [Math.floor(min / 1440), "dag", "dager"],
+    [Math.floor((min % 1440) / 60), "time", "timer"],
+    [min % 60, "minutt", "minutter"]
+  ];
+  boks.replaceChildren(...deler.map(([tall, en, flere]) => {
+    const d = el("div", "enhet");
+    d.append(el("b", null, String(tall)), el("span", null, tall === 1 ? en : flere));
+    return d;
+  }));
+}
 
-  function statusKlasse(status) {
-    return String(status).toLowerCase()
-      .replace("å", "a").replace("ø", "o").replace("æ", "ae")
-      .replace(/\s+/g, "-");
-  }
+// ---------------------------------------------------------------------
+//  Statusmeldinger
+// ---------------------------------------------------------------------
 
-  // ----- Topp -----
-  document.title = data.tittel;
-  document.getElementById("tittel").textContent = data.tittel;
-  document.getElementById("beskrivelse").textContent = data.beskrivelse || "";
-  const festdato = tilDato(data.dato);
-  document.getElementById("dato").textContent =
-    datoFormat.format(festdato) + (data.klokkeslett ? " kl. " + data.klokkeslett : "");
-  document.getElementById("sted").textContent = data.sted || "–";
+function visStatus(tekst, feil) {
+  const s = $("status");
+  s.textContent = tekst;
+  s.classList.toggle("feil", !!feil);
+  s.hidden = false;
+}
 
-  const igjen = dagerTil(festdato);
-  document.getElementById("nedtelling").textContent =
-    igjen > 1 ? igjen + " dager igjen" :
-    igjen === 1 ? "I morgen!" :
-    igjen === 0 ? "I dag! 🎄" : "Gjennomført";
+function visMelding(tekst, feil) {
+  const m = $("melding");
+  m.textContent = tekst;
+  m.classList.toggle("feil", !!feil);
+  m.hidden = !tekst;
+}
 
-  // ----- Program -----
-  const programListe = document.getElementById("program");
-  (data.program || []).forEach(function (p) {
-    const li = el("li");
-    li.appendChild(el("span", "tid", p.tid));
-    li.appendChild(el("span", "akt", p.aktivitet));
-    if (p.beskrivelse) li.appendChild(el("p", null, p.beskrivelse));
-    programListe.appendChild(li);
+// ---------------------------------------------------------------------
+//  Skjema
+// ---------------------------------------------------------------------
+
+function byggSkjema() {
+  const velg = $("kategori");
+  KATEGORIER.forEach((k) => {
+    const o = el("option", null, `${k.ikon} ${k.navn}`);
+    o.value = k.id;
+    velg.appendChild(o);
   });
 
-  // ----- Oppgaver -----
-  const oppgaver = data.oppgaver || [];
-  const liste = document.getElementById("oppgaveliste");
-  const tom = document.getElementById("tom");
-  const velgKategori = document.getElementById("filter-kategori");
-  const velgStatus = document.getElementById("filter-status");
-  const velgSortering = document.getElementById("sortering");
-
-  // Fremdrift
-  const antallFerdig = oppgaver.filter(function (o) { return o.status === "Ferdig"; }).length;
-  document.getElementById("fremdrift").textContent =
-    antallFerdig + " av " + oppgaver.length + " oppgaver ferdig";
-  document.getElementById("fremdrift-bar").style.width =
-    (oppgaver.length ? (antallFerdig / oppgaver.length) * 100 : 0) + "%";
-
-  // Kategorier i nedtrekksmenyen
-  Array.from(new Set(oppgaver.map(function (o) { return o.kategori; }).filter(Boolean)))
-    .sort(function (a, b) { return a.localeCompare(b, "nb"); })
-    .forEach(function (k) {
-      const opt = el("option", null, k);
-      opt.value = k;
-      velgKategori.appendChild(opt);
-    });
-
-  function fristTekst(dager) {
-    if (dager < 0) return "Forfalt for " + Math.abs(dager) + (dager === -1 ? " dag" : " dager") + " siden";
-    if (dager === 0) return "Frist i dag";
-    if (dager === 1) return "Frist i morgen";
-    return "Om " + dager + " dager";
-  }
-
-  function tegn() {
-    const kat = velgKategori.value;
-    const stat = velgStatus.value;
-    const sort = velgSortering.value;
-
-    const utvalg = oppgaver.filter(function (o) {
-      if (kat && o.kategori !== kat) return false;
-      if (stat === "aktive") return o.status !== "Ferdig";
-      if (stat && o.status !== stat) return false;
-      return true;
-    });
-
-    utvalg.sort(function (a, b) {
-      if (sort === "kategori") {
-        return (a.kategori || "").localeCompare(b.kategori || "", "nb") || tilDato(a.frist) - tilDato(b.frist);
-      }
-      const diff = tilDato(a.frist) - tilDato(b.frist);
-      return sort === "frist-synkende" ? -diff : diff;
-    });
-
-    liste.innerHTML = "";
-    tom.hidden = utvalg.length > 0;
-
-    utvalg.forEach(function (o) {
-      const frist = tilDato(o.frist);
-      const dager = dagerTil(frist);
-      const ferdig = o.status === "Ferdig";
-
-      const li = el("li", "task");
-      if (ferdig) li.classList.add("ferdig");
-      else if (dager < 0) li.classList.add("forfalt");
-      else if (dager <= SNART_DAGER) li.classList.add("snart");
-
-      const tittel = el("p", "task-title");
-      if (o.lenke) {
-        const a = el("a", null, o.tittel);
-        a.href = o.lenke;
-        a.target = "_blank";
-        a.rel = "noopener";
-        tittel.appendChild(a);
-      } else {
-        tittel.textContent = o.tittel;
-      }
-      li.appendChild(tittel);
-      li.appendChild(el("span", "badge " + statusKlasse(o.status), o.status));
-
-      const meta = el("div", "task-meta");
-      meta.appendChild(el("span", null, "📅 " + kortDato.format(frist)));
-      if (!ferdig) meta.appendChild(el("span", "frist-merke", fristTekst(dager)));
-      if (o.kategori) meta.appendChild(el("span", null, "🏷️ " + o.kategori));
-      if (o.ansvarlig) meta.appendChild(el("span", null, "👥 " + o.ansvarlig));
-      li.appendChild(meta);
-
-      if (o.notat) li.appendChild(el("p", "task-note", o.notat));
-      liste.appendChild(li);
-    });
-  }
-
-  [velgKategori, velgStatus, velgSortering].forEach(function (s) {
-    s.addEventListener("change", tegn);
+  const boks = $("allergener");
+  ALLERGENER.forEach((a) => {
+    const lab = el("label", "sjekk");
+    const cb = el("input");
+    cb.type = "checkbox";
+    cb.name = "allergen";
+    cb.value = a.id;
+    lab.append(cb, el("span", null, a.navn));
+    boks.appendChild(lab);
   });
-  tegn();
-})();
+
+  $("navn").maxLength = MAKS_NAVN;
+  $("rett").maxLength = MAKS_RETT;
+  $("rett").addEventListener("input", () => { visMelding(""); sjekkDuplikat(); });
+  $("skjema").addEventListener("submit", sendInn);
+  $("slett-min").addEventListener("click", slettMin);
+  oppdaterKnapp();
+}
+
+function sjekkDuplikat() {
+  const tatt = finnTatt($("rett").value);
+  const varsel = $("varsel");
+  if (tatt) {
+    const meg = tatt.uid === minUid ? " (deg)" : "";
+    varsel.textContent = `Denne retten er allerede tatt av ${tatt.navn}${meg}. Velg en annen rett.`;
+  }
+  varsel.hidden = !tatt;
+  oppdaterKnapp();
+  return tatt;
+}
+
+function oppdaterKnapp() {
+  $("send").disabled = !tilkoblet || !$("varsel").hidden;
+}
+
+function velgForslag(f) {
+  $("rett").value = f.rett;
+  $("kategori").value = f.kategori;
+  document.querySelectorAll('input[name="allergen"]').forEach((cb) => {
+    cb.checked = (f.allergener || []).includes(cb.value);
+  });
+  visMelding("");
+  sjekkDuplikat();
+  $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!$("navn").value.trim()) setTimeout(() => $("navn").focus({ preventScroll: true }), 300);
+}
+
+const ryddTekst = (t) => t.trim().replace(/\s+/g, " ");
+
+async function sendInn(e) {
+  e.preventDefault();
+  if (!tilkoblet || !minUid) return visMelding("Ikke koblet til ennå – vent litt og prøv igjen.", true);
+
+  const navn = ryddTekst($("navn").value);
+  const rett = ryddTekst($("rett").value);
+  const kategori = $("kategori").value;
+  const valgte = [...document.querySelectorAll('input[name="allergen"]:checked')].map((cb) => cb.value);
+
+  if (!navn) return visMelding("Skriv inn navnet ditt.", true);
+  if (!rett) return visMelding("Skriv inn hvilken rett du tar med.", true);
+  if (!kategoriFraId[kategori]) return visMelding("Velg en kategori.", true);
+  if (sjekkDuplikat()) return;
+
+  const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT), kategori };
+  if (valgte.length) data.allergener = Object.fromEntries(valgte.map((a) => [a, true]));
+
+  $("send").disabled = true;
+  try {
+    await fb.set(fb.ref(db, `pameldinger/${minUid}`), data);
+    $("skjema").reset();
+    visMelding("");
+    $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    console.error(err);
+    visMelding("Kunne ikke lagre påmeldingen. Sjekk nettforbindelsen og prøv igjen.", true);
+  } finally {
+    oppdaterKnapp();
+  }
+}
+
+async function slettMin() {
+  if (!minUid || !pameldinger[minUid]) return;
+  if (!confirm(`Er du sikker på at du vil slette påmeldingen din (${pameldinger[minUid].rett})?`)) return;
+  try {
+    await fb.remove(fb.ref(db, `pameldinger/${minUid}`));
+  } catch (err) {
+    console.error(err);
+    alert("Kunne ikke slette påmeldingen. Prøv igjen.");
+  }
+}
+
+// ---------------------------------------------------------------------
+//  Visning
+// ---------------------------------------------------------------------
+
+function allergenTagger(p) {
+  const ider = Object.keys(p.allergener || {}).filter((a) => allergenNavn[a]);
+  if (!ider.length) return null;
+  const boks = el("span", "tagger");
+  ider.forEach((a) => boks.appendChild(el("span", "tagg", allergenNavn[a])));
+  return boks;
+}
+
+function visMinPamelding() {
+  const min = minUid && pameldinger[minUid];
+  $("skjema").hidden = !!min;
+  $("min-pamelding").hidden = !min;
+  if (min) {
+    const k = kategoriFraId[min.kategori];
+    $("min-rett").textContent = `${k ? k.ikon + " " : ""}${min.rett}`;
+  }
+}
+
+function visForslag() {
+  const boks = $("forslag");
+  boks.replaceChildren();
+  const harMeldtSeg = !!(minUid && pameldinger[minUid]);
+  let ledige = 0;
+
+  KATEGORIER.forEach((k) => {
+    const liste = FORSLAG.filter((f) => f.kategori === k.id && !finnTatt(f.rett));
+    ledige += liste.length;
+    const gruppe = el("div", "gruppe");
+    gruppe.appendChild(el("h3", null, `${k.ikon} ${k.navn}`));
+    if (!liste.length) {
+      gruppe.appendChild(el("p", "tom", "Alle forslagene her er tatt – finn gjerne på noe eget!"));
+    } else {
+      const chips = el("div", "chips");
+      liste.forEach((f) => {
+        const b = el("button", "chip", f.rett);
+        b.type = "button";
+        b.disabled = harMeldtSeg;
+        b.addEventListener("click", () => velgForslag(f));
+        chips.appendChild(b);
+      });
+      gruppe.appendChild(chips);
+    }
+    boks.appendChild(gruppe);
+  });
+
+  $("forslag-antall").textContent = `${ledige} av ${FORSLAG.length} ledige`;
+}
+
+function visOversikt() {
+  const alle = Object.entries(pameldinger).map(([uid, p]) => ({ uid, ...p }));
+  $("totalt").textContent = `${alle.length} ${alle.length === 1 ? "rett" : "retter"} påmeldt`;
+
+  const tellere = $("tellere");
+  tellere.replaceChildren();
+  KATEGORIER.forEach((k) => {
+    const antall = alle.filter((p) => p.kategori === k.id).length;
+    const li = el("li", null, `${k.ikon} ${k.navn} `);
+    li.appendChild(el("b", null, String(antall)));
+    tellere.appendChild(li);
+  });
+
+  const boks = $("oversikt");
+  boks.replaceChildren();
+  if (!alle.length) {
+    boks.appendChild(el("p", "tom", tilkoblet ? "Ingen har meldt seg på ennå. Bli den første!" : "Laster påmeldinger …"));
+    return;
+  }
+
+  KATEGORIER.forEach((k) => {
+    const i = alle
+      .filter((p) => p.kategori === k.id)
+      .sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
+    if (!i.length) return;
+    const gruppe = el("div", "gruppe");
+    gruppe.appendChild(el("h3", null, `${k.ikon} ${k.navn}`));
+    const ul = el("ul", "liste");
+    i.forEach((p) => {
+      const li = el("li");
+      li.appendChild(el("span", "rett", p.rett));
+      li.appendChild(el("span", "navn", p.navn));
+      if (p.uid === minUid) {
+        li.appendChild(el("span", "meg", "(deg)"));
+        const slett = el("button", "slett-lenke", "Slett");
+        slett.type = "button";
+        slett.addEventListener("click", slettMin);
+        li.appendChild(slett);
+      }
+      const tagger = allergenTagger(p);
+      if (tagger) li.appendChild(tagger);
+      ul.appendChild(li);
+    });
+    gruppe.appendChild(ul);
+    boks.appendChild(gruppe);
+  });
+}
+
+function visAlt() {
+  visMinPamelding();
+  visForslag();
+  visOversikt();
+  sjekkDuplikat();
+}
+
+// ---------------------------------------------------------------------
+//  Firebase
+// ---------------------------------------------------------------------
+
+function erKonfigurert() {
+  return FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith("LIM")
+    && FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.startsWith("https://");
+}
+
+async function kobleTil() {
+  if (!erKonfigurert()) {
+    visStatus("Firebase er ikke satt opp ennå. Lim inn config-verdiene i config.js (se README.md).", true);
+    return;
+  }
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSJON}`;
+    const [appMod, authMod, dbMod] = await Promise.all([
+      import(`${base}/firebase-app.js`),
+      import(`${base}/firebase-auth.js`),
+      import(`${base}/firebase-database.js`)
+    ]);
+    const app = appMod.initializeApp(FIREBASE_CONFIG);
+    const auth = authMod.getAuth(app);
+    db = dbMod.getDatabase(app);
+    fb = { ref: dbMod.ref, set: dbMod.set, remove: dbMod.remove };
+
+    let lytter = false;
+    authMod.onAuthStateChanged(auth, (bruker) => {
+      if (!bruker) return;
+      minUid = bruker.uid;
+      if (lytter) return;
+      lytter = true;
+      dbMod.onValue(dbMod.ref(db, "pameldinger"), (snap) => {
+        pameldinger = snap.val() || {};
+        tilkoblet = true;
+        $("status").hidden = true;
+        visAlt();
+      }, (err) => {
+        console.error(err);
+        tilkoblet = false;
+        visStatus("Fikk ikke tilgang til påmeldingene. Sjekk sikkerhetsreglene i Firebase.", true);
+        oppdaterKnapp();
+      });
+    });
+
+    await authMod.signInAnonymously(auth);
+  } catch (err) {
+    console.error(err);
+    visStatus("Kunne ikke koble til. Sjekk nettforbindelsen, og at anonym innlogging er slått på i Firebase.", true);
+  }
+}
+
+// ---------------------------------------------------------------------
+//  Start
+// ---------------------------------------------------------------------
+
+visInfo();
+byggSkjema();
+visAlt();
+kobleTil();
