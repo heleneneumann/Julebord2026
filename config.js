@@ -8,7 +8,7 @@ const JULEBORD = {
   dato: "2026-12-27",   // Skriv på formen ÅÅÅÅ-MM-DD, f.eks. "2026-12-12"
   tid: "18:00",         // Skriv på formen TT:MM, f.eks. "18:30"
   sted: "[STED]",   // F.eks. "Hos Kari, Storgata 1"
-  intro: "Alle tar med én tapasrett. Se hva som er ledig, og meld på din rett!"
+  intro: "Ta med én tapasrett!"   // Vises nederst på invitasjonskortet
 };
 
 // 2) Firebase-oppsett. Lim inn verdiene fra Firebase-konsollen (se README.md).
@@ -42,38 +42,11 @@ const ALLERGENER = [
   { id: "skalldyr", navn: "Skalldyr" }
 ];
 
-// 5) Forslag til retter. "allergener" er bare et forslag som krysses av
-//    automatisk – gjesten kan endre det selv.
+// 5) Forslag til retter. Står listen tom, skjules forslagsseksjonen på siden.
+//    Legg til én linje per forslag, f.eks.:
+//    { rett: "Patatas bravas", kategori: "vegetar", allergener: [] },
+//    { rett: "Gambas al ajillo", kategori: "fisk", allergener: ["skalldyr"] },
+//    "kategori" må være en av id-ene over. "allergener" krysses av automatisk
+//    når gjesten velger forslaget (kan være tom: []).
 const FORSLAG = [
-  { rett: "Chorizo i rødvin",            kategori: "kjott",   allergener: [] },
-  { rett: "Spekeskinke og melon",        kategori: "kjott",   allergener: [] },
-  { rett: "Albóndigas i tomatsaus",      kategori: "kjott",   allergener: ["gluten"] },
-  { rett: "Baconsurrede dadler",         kategori: "kjott",   allergener: [] },
-  { rett: "Kyllingspyd med paprika",     kategori: "kjott",   allergener: [] },
-  { rett: "Pinnekjøtt-biter",            kategori: "kjott",   allergener: [] },
-
-  { rett: "Gambas al ajillo",            kategori: "fisk",    allergener: ["skalldyr"] },
-  { rett: "Blåskjell i hvitvin",         kategori: "fisk",    allergener: ["skalldyr"] },
-  { rett: "Bacalao-kroketter",           kategori: "fisk",    allergener: ["gluten", "laktose"] },
-  { rett: "Røkelaks på blini",           kategori: "fisk",    allergener: ["gluten", "laktose"] },
-  { rett: "Marinerte ansjos (boquerones)", kategori: "fisk",  allergener: [] },
-
-  { rett: "Patatas bravas",              kategori: "vegetar", allergener: [] },
-  { rett: "Tortilla española",           kategori: "vegetar", allergener: [] },
-  { rett: "Pimientos de padrón",         kategori: "vegetar", allergener: [] },
-  { rett: "Marinerte oliven",            kategori: "vegetar", allergener: [] },
-  { rett: "Manchego med honning",        kategori: "vegetar", allergener: ["laktose"] },
-  { rett: "Champignon i hvitløk",        kategori: "vegetar", allergener: [] },
-  { rett: "Fylte dadler med geitost",    kategori: "vegetar", allergener: ["laktose"] },
-
-  { rett: "Aioli",                       kategori: "brod",    allergener: [] },
-  { rett: "Bruschetta",                  kategori: "brod",    allergener: ["gluten"] },
-  { rett: "Pan con tomate",              kategori: "brod",    allergener: ["gluten"] },
-  { rett: "Romescosaus",                 kategori: "brod",    allergener: ["notter"] },
-  { rett: "Grissini med spekeskinke",    kategori: "brod",    allergener: ["gluten"] },
-
-  { rett: "Churros med sjokoladesaus",   kategori: "dessert", allergener: ["gluten", "laktose"] },
-  { rett: "Crema catalana",              kategori: "dessert", allergener: ["laktose"] },
-  { rett: "Mandelkake",                  kategori: "dessert", allergener: ["notter"] },
-  { rett: "Pepperkaker med blåmuggost",  kategori: "dessert", allergener: ["gluten", "laktose"] }
 ];

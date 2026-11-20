@@ -1,248 +1,376 @@
 :root {
-  --bg: #f8f3ea;
-  --kort: #fffdf8;
-  --tekst: #1f2a24;
-  --dempet: #66706a;
-  --kant: #e7dfd0;
-  --gronn: #173d2f;
-  --gronn-2: #24563f;
-  --rod: #9e1b32;
-  --rod-lys: #fbe9ec;
-  --gull: #c9a24a;
-  --gull-lys: #f6edd6;
-  --ok: #2c7a4b;
-  --ok-lys: #e4f3e9;
-  --radius: 14px;
-  --skygge: 0 1px 2px rgba(31, 42, 36, .06), 0 4px 16px rgba(31, 42, 36, .06);
+  --bg: #3d0006;
+  --bg-stripe: #48070e;
+  --stripe: 14px;
+  --krem: #f3e6c8;
+  --papir-1: #f8eed7;
+  --papir-2: #efdfbd;
+  --blekk: #8a1520;
+  --blekk-mork: #4a0a10;
+  --gull: #c9a45e;
+  --gull-lys: #f3dfb0;
+  --ok: #2d6a3e;
+
+  --skrift: "Great Vibes", "Snell Roundhand", cursive;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #101814;
-    --kort: #17221c;
-    --tekst: #eef1ec;
-    --dempet: #a3ada6;
-    --kant: #2a3a31;
-    --rod: #ff8a9b;
-    --rod-lys: #3b1820;
-    --gull: #e0bf6e;
-    --gull-lys: #33291a;
-    --ok: #7fd3a0;
-    --ok-lys: #1b3325;
-    --skygge: none;
-  }
-}
+* , *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
-* { box-sizing: border-box; }
+html {
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--bg) 0 var(--stripe),
+    var(--bg-stripe) var(--stripe) calc(var(--stripe) * 2)
+  );
+}
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--tekst);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--krem);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
 
-.wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+.sno {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
 
-h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; }
+header, main, footer { position: relative; z-index: 1; }
 
-/* ---------- Toppfelt ---------- */
-.hero {
-  color: #fdf8ee;
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+.skrift, .tittel, .tagline, .tavle-tittel, .nedtelling-etikett {
+  font-family: var(--skrift);
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ---------- Toppen ---------- */
+
+.topp { padding: 28px 16px 8px; text-align: center; }
+
+.tagline {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 10vw, 3.2rem);
+  line-height: 1.1;
+}
+
+.invitasjon {
+  position: relative;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 44px 28px 40px;
+  color: var(--blekk);
   background:
-    radial-gradient(circle at 15% 20%, rgba(255,255,255,.08) 0 2px, transparent 3px),
-    radial-gradient(circle at 70% 35%, rgba(255,255,255,.07) 0 2px, transparent 3px),
-    radial-gradient(circle at 40% 80%, rgba(255,255,255,.06) 0 2px, transparent 3px),
-    linear-gradient(160deg, var(--gronn) 0%, var(--gronn-2) 55%, #5c1424 100%);
-  background-size: 120px 120px, 160px 160px, 140px 140px, auto;
-  padding: 40px 0 32px;
-  border-bottom: 3px solid var(--gull);
-  text-align: center;
+    radial-gradient(circle at 50% 0, rgba(255,255,255,.5), transparent 70%),
+    linear-gradient(170deg, var(--papir-1), var(--papir-2));
+  border-radius: 4px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .45);
+  outline: 1px solid rgba(138, 21, 32, .35);
+  outline-offset: -12px;
 }
-.eyebrow { margin: 0 0 6px; color: var(--gull); letter-spacing: .18em; font-size: .75rem; text-transform: uppercase; }
-.hero h1 { margin: 0 0 8px; font-size: clamp(2rem, 8vw, 3rem); line-height: 1.1; }
-.intro { margin: 0 auto 20px; max-width: 46ch; opacity: .92; }
+/* Dobbel ramme som en blondekant */
+.invitasjon::before {
+  content: "";
+  position: absolute;
+  inset: 17px;
+  border: 1px dashed rgba(138, 21, 32, .3);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.invitasjon p, .invitasjon h1 { margin: 0; }
 
-.info {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 0 0 20px;
-}
-.info div { background: rgba(255,255,255,.1); border-radius: 10px; padding: 8px 6px; }
-.info dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--gull); }
-.info dd { margin: 0; font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
-@media (max-width: 420px) {
-  .info { grid-template-columns: 1fr 1fr; }
-  .info div:first-child { grid-column: 1 / -1; }
+.intro { font-size: 1.05rem; margin-bottom: 10px !important; }
+.tittel { font-size: clamp(2.8rem, 13vw, 3.8rem); line-height: 1.02; }
+.tittel span { display: block; }
+
+.strek {
+  width: 45%;
+  height: 0;
+  margin: 18px auto 14px;
+  border: 0;
+  border-top: 1px solid rgba(138, 21, 32, .55);
 }
 
-.nedtelling { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; font-weight: 600; }
+.detaljer { font-size: 1.12rem; line-height: 1.45; }
+.detaljer span { display: block; }
+.detaljer span:empty { display: none; }
+
+.hilsen {
+  margin-top: 22px !important;
+  font-family: var(--skrift);
+  font-style: normal;
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+
+/* ---------- Nedtelling ---------- */
+
+.nedtelling { margin: 26px 0 8px; }
+.nedtelling-etikett { margin: 0 0 6px; font-size: 1.6rem; line-height: 1.1; }
+.nedtelling-enheter { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .enhet {
-  min-width: 72px;
-  padding: 8px 10px;
-  border: 1px solid rgba(201,162,74,.6);
-  border-radius: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  min-width: 4.4em;
+  padding: 8px 6px 6px;
+  border: 1px solid rgba(243, 230, 200, .28);
+  border-radius: 8px;
+  background: rgba(20, 0, 3, .28);
+  box-shadow: inset 0 1px 0 rgba(243, 230, 200, .08);
 }
-.enhet b { font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; font-family: Georgia, serif; }
-.enhet span { font-size: .72rem; font-weight: 500; opacity: .85; }
+.enhet b { font-weight: 500; font-size: 1.65rem; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+.enhet span { margin-top: 4px; font-size: .74rem; opacity: .8; }
+.nedtelling-melding { margin: 0; font-size: 1.15rem; }
 
 /* ---------- Status ---------- */
-.status {
-  margin: 16px 0 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--gull-lys);
-  font-size: .9rem;
-}
-.status.feil { background: var(--rod-lys); color: var(--rod); font-weight: 600; }
 
-/* ---------- Kort ---------- */
-main { padding-top: 4px; }
-.kort {
-  background: var(--kort);
-  border: 1px solid var(--kant);
-  border-radius: var(--radius);
-  box-shadow: var(--skygge);
-  padding: 20px 16px;
-  margin: 16px 0;
+.status {
+  margin: 20px 0 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 230, 200, .25);
+  background: rgba(20, 0, 3, .35);
+  text-align: center;
+  font-size: .92rem;
 }
-.kort h2 { margin: 0 0 12px; font-size: 1.35rem; color: var(--tekst); }
-.kort-topp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.hjelp { color: var(--dempet); font-size: .85rem; font-weight: 400; }
-.kort > .hjelp { margin: -6px 0 12px; }
+.status.feil { background: var(--papir-1); color: var(--blekk); font-weight: 500; border-color: transparent; }
+
+/* ---------- Papirkort ---------- */
+
+.papir {
+  margin: 24px 0;
+  padding: 28px 20px 22px;
+  color: var(--blekk);
+  background: linear-gradient(170deg, var(--papir-1), var(--papir-2));
+  border-radius: 6px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .45);
+}
+.papir .skrift {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 2.6rem;
+  line-height: 1.1;
+}
+.hjelp { font-size: .88rem; opacity: .8; font-weight: 400; }
+.midt { text-align: center; margin: -6px 0 14px; }
 
 /* ---------- Skjema ---------- */
-.felt { display: block; margin: 0 0 14px; font-weight: 600; font-size: .92rem; border: 0; padding: 0; }
-fieldset.felt legend { padding: 0; margin-bottom: 6px; }
+
+.felt { display: block; margin: 0 0 14px; border: 0; padding: 0; min-width: 0; }
+.felt > span, fieldset.felt legend { display: block; margin-bottom: 4px; font-size: .92rem; padding: 0; }
+
 input[type="text"], select {
   display: block;
   width: 100%;
-  margin-top: 4px;
-  font: inherit;
-  font-size: 16px; /* hindrer zoom på iPhone */
-  font-weight: 400;
-  color: var(--tekst);
-  background: var(--bg);
-  border: 1px solid var(--kant);
-  border-radius: 10px;
-  padding: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(138, 21, 32, .35);
+  border-radius: 6px;
+  background: #fffaf0;
+  color: var(--blekk-mork);
+  font: italic 16px/1.4 var(--serif); /* 16px hindrer zoom på iPhone */
+  -webkit-appearance: none;
+  appearance: none;
 }
-input:focus, select:focus, button:focus-visible {
-  outline: 2px solid var(--gull);
-  outline-offset: 1px;
+select {
+  background-image: linear-gradient(45deg, transparent 50%, var(--blekk) 50%), linear-gradient(135deg, var(--blekk) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
 }
+input::placeholder { color: rgba(74, 10, 16, .4); }
+input:focus, select:focus { outline: 2px solid rgba(138, 21, 32, .5); outline-offset: 1px; }
 
 .allergener { display: flex; flex-wrap: wrap; gap: 8px; }
 .sjekk {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid var(--kant);
+  padding: 7px 12px;
+  border: 1px solid rgba(138, 21, 32, .3);
   border-radius: 999px;
-  font-weight: 500;
+  background: #fffaf0;
   cursor: pointer;
   user-select: none;
+  font-size: .95rem;
 }
-.sjekk:has(input:checked) { background: var(--gull-lys); border-color: var(--gull); }
-.sjekk input { accent-color: var(--rod); width: 18px; height: 18px; margin: 0; }
+.sjekk:has(input:checked) { background: var(--blekk); color: var(--krem); border-color: var(--blekk); }
+.sjekk input { accent-color: var(--blekk); width: 16px; height: 16px; margin: 0; }
 
 .varsel {
-  margin: -6px 0 14px;
+  margin: -4px 0 14px;
   padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--rod-lys);
-  color: var(--rod);
-  font-weight: 600;
-  border-left: 4px solid var(--rod);
+  border-radius: 6px;
+  background: var(--blekk);
+  color: var(--krem);
+  font-weight: 500;
 }
-.melding { margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--ok-lys); color: var(--ok); font-weight: 600; }
-.melding.feil { background: var(--rod-lys); color: var(--rod); }
+.melding { margin: 0 0 14px; padding: 10px 12px; border-radius: 6px; background: rgba(45, 106, 62, .12); color: var(--ok); }
+.melding.feil { background: var(--blekk); color: var(--krem); }
+
+/* ---------- Knapper ---------- */
 
 .knapp {
+  display: block;
   width: 100%;
-  font: inherit;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #fff;
-  background: var(--rod);
-  border: 0;
-  border-radius: 10px;
-  padding: 14px;
+  margin-top: 6px;
+  padding: .8em 1.5em;
+  font: italic 500 1.05rem/1.2 var(--serif);
+  color: var(--krem);
+  background: var(--blekk);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(74, 10, 16, .3);
   cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-@media (prefers-color-scheme: dark) { .knapp { color: #1a0d10; } }
-.knapp:disabled { opacity: .45; cursor: not-allowed; }
-.knapp-sekundaer { background: transparent; color: var(--rod); border: 1px solid var(--rod); }
-@media (prefers-color-scheme: dark) { .knapp-sekundaer { color: var(--rod); } }
+.knapp:active { transform: scale(.97); }
+.knapp:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.knapp:focus-visible, .chip:focus-visible, .slett-lenke:focus-visible { outline: 2px solid var(--blekk); outline-offset: 3px; }
+.knapp-spokelse { background: none; color: var(--blekk); border-color: rgba(138, 21, 32, .4); box-shadow: none; }
 
-.min-pamelding p { margin: 0 0 8px; }
-.min-rett { font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700; }
+.min-pamelding { text-align: center; }
+.min-pamelding p { margin: 0 0 6px; }
+.min-rett { font-family: var(--skrift); font-style: normal; font-size: 2.2rem; line-height: 1.15; }
 
 /* ---------- Forslag ---------- */
+
 .gruppe { margin-bottom: 14px; }
-.gruppe h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin: 0 0 8px; }
+.gruppe h3 { margin: 0 0 8px; font-size: .95rem; font-weight: 500; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-  font: inherit;
-  font-size: .9rem;
-  color: var(--tekst);
-  background: var(--bg);
-  border: 1px solid var(--kant);
+  font: italic 400 .95rem/1.3 var(--serif);
+  color: var(--blekk-mork);
+  background: #fffaf0;
+  border: 1px solid rgba(138, 21, 32, .3);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   cursor: pointer;
-  text-align: left;
 }
-.chip:hover:not(:disabled) { border-color: var(--gull); background: var(--gull-lys); }
-.chip:disabled { cursor: default; opacity: .6; }
-.tom { color: var(--dempet); font-size: .9rem; font-style: italic; margin: 0; }
+.chip:hover:not(:disabled) { background: var(--blekk); color: var(--krem); }
+.chip:disabled { opacity: .5; cursor: default; }
+.tom { margin: 0; font-size: .92rem; opacity: .75; text-align: center; }
 
-/* ---------- Oversikt ---------- */
-.tellere { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+/* ---------- Tavla med lapper ---------- */
+
+.tavle { margin: 40px 0 24px; text-align: center; --snor: 22px; }
+.tavle-tittel { margin: 0; font-size: clamp(2.6rem, 12vw, 3.6rem); line-height: 1.1; }
+.tavle-under { margin: 2px 0 14px; opacity: .8; }
+
+.tellere { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .tellere li {
-  background: var(--gull-lys);
+  padding: 3px 12px;
+  border: 1px solid rgba(243, 230, 200, .28);
   border-radius: 999px;
-  padding: 4px 12px;
+  background: rgba(20, 0, 3, .28);
   font-size: .85rem;
 }
-.tellere b { font-variant-numeric: tabular-nums; }
+.tellere b { font-weight: 600; font-style: normal; font-variant-numeric: tabular-nums; }
 
-.liste { list-style: none; padding: 0; margin: 0; }
-.liste li {
+.kategori { margin-bottom: 30px; }
+.kategori-navn { margin: 0 0 4px; font-family: var(--skrift); font-style: normal; font-weight: 400; font-size: 2rem; line-height: 1.1; }
+
+/* Gullsnora lappene henger i */
+.lapper {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: calc(var(--snor) + 6px) 0 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--kant);
+  justify-content: center;
+  gap: 26px 14px;
 }
-.liste li:last-child { border-bottom: 0; }
-.liste .rett { font-weight: 600; flex: 1 1 60%; }
-.liste .navn { color: var(--dempet); font-size: .9rem; }
-.liste .meg { color: var(--rod); font-weight: 600; }
-.tagger { display: flex; gap: 4px; flex-wrap: wrap; flex-basis: 100%; }
-.tagg {
-  font-size: .72rem;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--kant);
-  color: var(--dempet);
-}
-.slett-lenke {
-  font: inherit;
-  font-size: .8rem;
-  color: var(--rod);
-  background: none;
-  border: 0;
-  padding: 0;
-  text-decoration: underline;
-  cursor: pointer;
+.lapper::before {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--gull) 8%, var(--gull-lys) 50%, var(--gull) 92%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
 }
 
-footer { text-align: center; color: var(--dempet); padding: 8px 16px 40px; }
+.lapp {
+  position: relative;
+  width: min(42vw, 176px);
+  padding: 24px 12px 14px;
+  color: var(--blekk);
+  background: linear-gradient(170deg, var(--papir-1), var(--papir-2));
+  border-radius: 3px;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, .35);
+  outline: 1px dashed rgba(138, 21, 32, .22);
+  outline-offset: -6px;
+  transform-origin: 50% calc(-1 * var(--snor));
+  animation: sving 5s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+/* Snor opp til gullsnora */
+.lapp::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-1 * var(--snor) - 4px);
+  width: 2px;
+  height: calc(var(--snor) + 16px);
+  margin-left: -1px;
+  background: linear-gradient(90deg, #b8935a, var(--gull-lys), #b8935a);
+}
+/* Hull i lappen */
+.lapp::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #5a0f18;
+  box-shadow: 0 0 0 2px #d4b57c;
+}
+.lapp-rett { display: block; font-family: var(--skrift); font-style: normal; font-size: 1.6rem; line-height: 1.1; overflow-wrap: anywhere; }
+.lapp-navn { display: block; margin-top: 6px; font-size: .92rem; overflow-wrap: anywhere; }
+.lapp-allergener { display: block; margin-top: 6px; font-size: .74rem; opacity: .75; }
+.lapp.min { box-shadow: 0 0 0 2px var(--gull-lys), 0 10px 18px rgba(0, 0, 0, .35); }
+.slett-lenke {
+  margin-top: 6px;
+  padding: 0;
+  font: italic .8rem var(--serif);
+  color: var(--blekk);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.tavle > #oversikt > .tom { color: var(--krem); }
+
+@keyframes sving {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50%      { transform: rotate(1.4deg); }
+}
+
+footer { padding: 8px 16px 48px; text-align: center; font-family: var(--skrift); font-style: normal; font-size: 1.5rem; opacity: .85; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lapp { animation: none; }
+  .sno { display: none; }
+}

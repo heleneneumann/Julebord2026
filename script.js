@@ -72,13 +72,17 @@ function lesDato() {
 
 function visInfo() {
   document.title = JULEBORD.tittel;
-  $("tittel").textContent = JULEBORD.tittel;
+  // "Julebord med tapas" vises på to linjer: "Julebord" / "med tapas"
+  const tittel = $("tittel");
+  const deler = JULEBORD.tittel.split(/ (?=med )/);
+  tittel.replaceChildren(...deler.map((d) => el("span", null, d)));
   $("intro").textContent = JULEBORD.intro || "";
   const dato = lesDato();
-  $("info-dato").textContent = dato
+  const datoTekst = dato
     ? new Intl.DateTimeFormat("nb-NO", { weekday: "long", day: "numeric", month: "long" }).format(dato)
     : JULEBORD.dato;
-  $("info-tid").textContent = JULEBORD.tid;
+  $("info-dato").textContent = datoTekst.charAt(0).toUpperCase() + datoTekst.slice(1);
+  $("info-tid").textContent = JULEBORD.tid ? "kl. " + JULEBORD.tid.replace(":", ".") : "";
   $("info-sted").textContent = JULEBORD.sted;
   oppdaterNedtelling();
   setInterval(oppdaterNedtelling, 30000);
@@ -87,14 +91,11 @@ function visInfo() {
 function oppdaterNedtelling() {
   const boks = $("nedtelling");
   const maal = lesDato();
-  if (!maal) {
-    boks.textContent = "Nedtellingen starter når datoen er satt.";
-    return;
-  }
+  const melding = (tekst) => boks.replaceChildren(el("p", "nedtelling-melding", tekst));
+  if (!maal) return melding("Nedtellingen starter når datoen er satt.");
   const ms = maal - Date.now();
   if (ms <= 0) {
-    boks.textContent = ms > -12 * 3600e3 ? "Det er julebord nå! 🎄" : "Julebordet er over – takk for sist! ✨";
-    return;
+    return melding(ms > -12 * 3600e3 ? "Det er julebord nå! 🎄" : "Julebordet er over – takk for sist! ✨");
   }
   const min = Math.floor(ms / 60000);
   const deler = [
@@ -234,25 +235,19 @@ async function slettMin() {
 //  Visning
 // ---------------------------------------------------------------------
 
-function allergenTagger(p) {
-  const ider = Object.keys(p.allergener || {}).filter((a) => allergenNavn[a]);
-  if (!ider.length) return null;
-  const boks = el("span", "tagger");
-  ider.forEach((a) => boks.appendChild(el("span", "tagg", allergenNavn[a])));
-  return boks;
-}
-
 function visMinPamelding() {
   const min = minUid && pameldinger[minUid];
   $("skjema").hidden = !!min;
   $("min-pamelding").hidden = !min;
   if (min) {
     const k = kategoriFraId[min.kategori];
-    $("min-rett").textContent = `${k ? k.ikon + " " : ""}${min.rett}`;
+    $("min-rett").textContent = min.rett;
   }
 }
 
 function visForslag() {
+  $("forslag-seksjon").hidden = FORSLAG.length === 0;
+  if (!FORSLAG.length) return;
   const boks = $("forslag");
   boks.replaceChildren();
   const harMeldtSeg = !!(minUid && pameldinger[minUid]);
@@ -279,7 +274,7 @@ function visForslag() {
     boks.appendChild(gruppe);
   });
 
-  $("forslag-antall").textContent = `${ledige} av ${FORSLAG.length} ledige`;
+  $("forslag-antall").textContent = `(${ledige} av ${FORSLAG.length} ledige)`;
 }
 
 function visOversikt() {
@@ -307,22 +302,25 @@ function visOversikt() {
       .filter((p) => p.kategori === k.id)
       .sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
     if (!i.length) return;
-    const gruppe = el("div", "gruppe");
-    gruppe.appendChild(el("h3", null, `${k.ikon} ${k.navn}`));
-    const ul = el("ul", "liste");
-    i.forEach((p) => {
-      const li = el("li");
-      li.appendChild(el("span", "rett", p.rett));
-      li.appendChild(el("span", "navn", p.navn));
+    const gruppe = el("div", "kategori");
+    gruppe.appendChild(el("h3", "kategori-navn", k.navn));
+    const ul = el("ul", "lapper");
+    i.forEach((p, nr) => {
+      const li = el("li", "lapp");
+      li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
+      li.appendChild(el("span", "lapp-rett", p.rett));
+      li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
+      const allergener = Object.keys(p.allergener || {}).filter((a) => allergenNavn[a]);
+      if (allergener.length) {
+        li.appendChild(el("span", "lapp-allergener", "Inneholder: " + allergener.map((a) => allergenNavn[a].toLowerCase()).join(", ")));
+      }
       if (p.uid === minUid) {
-        li.appendChild(el("span", "meg", "(deg)"));
+        li.classList.add("min");
         const slett = el("button", "slett-lenke", "Slett");
         slett.type = "button";
         slett.addEventListener("click", slettMin);
         li.appendChild(slett);
       }
-      const tagger = allergenTagger(p);
-      if (tagger) li.appendChild(tagger);
       ul.appendChild(li);
     });
     gruppe.appendChild(ul);
@@ -390,9 +388,59 @@ async function kobleTil() {
 }
 
 // ---------------------------------------------------------------------
+//  Snøfall i bakgrunnen
+// ---------------------------------------------------------------------
+
+function startSno() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const lerret = $("sno");
+  const ctx = lerret.getContext("2d");
+  let fnugg = [];
+  let b = 0, h = 0;
+
+  function tilpass() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    b = window.innerWidth;
+    h = window.innerHeight;
+    lerret.width = b * dpr;
+    lerret.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const antall = Math.round(Math.min(90, (b * h) / 9000));
+    fnugg = Array.from({ length: antall }, () => ({
+      x: Math.random() * b,
+      y: Math.random() * h,
+      r: 0.8 + Math.random() * 2.2,
+      fart: 0.25 + Math.random() * 0.6,
+      fase: Math.random() * Math.PI * 2,
+      alfa: 0.35 + Math.random() * 0.5
+    }));
+  }
+
+  function tegn() {
+    ctx.clearRect(0, 0, b, h);
+    for (const f of fnugg) {
+      f.y += f.fart;
+      f.fase += 0.01;
+      f.x += Math.sin(f.fase) * 0.3;
+      if (f.y > h + 5) { f.y = -5; f.x = Math.random() * b; }
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(243, 230, 200, ${f.alfa})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(tegn);
+  }
+
+  tilpass();
+  window.addEventListener("resize", tilpass);
+  requestAnimationFrame(tegn);
+}
+
+// ---------------------------------------------------------------------
 //  Start
 // ---------------------------------------------------------------------
 
+startSno();
 visInfo();
 byggSkjema();
 visAlt();

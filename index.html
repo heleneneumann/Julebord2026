@@ -2,23 +2,41 @@
 <html lang="no">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#173d2f">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Julebord med tapas</title>
+  <!-- Tekst som vises når lenken deles i Messenger, SMS o.l. -->
+  <meta name="description" content="Du er invitert til julebord med tapas! Meld på hvilken rett du tar med.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Julebord med tapas">
+  <meta property="og:description" content="Du er invitert! Meld på hvilken tapasrett du tar med.">
+  <meta name="theme-color" content="#3d0006">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="hero">
-    <div class="wrap">
-      <p class="eyebrow">✦ Du er invitert ✦</p>
-      <h1 id="tittel">Julebord med tapas</h1>
-      <p id="intro" class="intro"></p>
-      <dl class="info">
-        <div><dt>Dato</dt><dd id="info-dato"></dd></div>
-        <div><dt>Tid</dt><dd id="info-tid"></dd></div>
-        <div><dt>Sted</dt><dd id="info-sted"></dd></div>
-      </dl>
-      <div id="nedtelling" class="nedtelling" aria-live="polite"></div>
+  <canvas class="sno" id="sno" aria-hidden="true"></canvas>
+
+  <header class="topp">
+    <p class="tagline">God jul!</p>
+
+    <article class="invitasjon" aria-label="Invitasjon">
+      <p class="intro">Du er herved invitert til</p>
+      <h1 class="tittel" id="tittel">Julebord med tapas</h1>
+      <hr class="strek">
+      <p class="detaljer">
+        <span id="info-dato"></span>
+        <span id="info-tid"></span>
+        <span id="info-sted"></span>
+      </p>
+      <p class="hilsen" id="intro"></p>
+    </article>
+
+    <div class="nedtelling">
+      <p class="nedtelling-etikett">snart er det julebord</p>
+      <div id="nedtelling" class="nedtelling-enheter" aria-live="off"></div>
     </div>
   </header>
 
@@ -26,25 +44,25 @@
     <p id="status" class="status">Kobler til …</p>
 
     <!-- Påmelding -->
-    <section class="kort" id="pamelding" aria-labelledby="pamelding-tittel">
-      <h2 id="pamelding-tittel">Meld på din rett</h2>
+    <section class="papir" id="pamelding" aria-labelledby="pamelding-tittel">
+      <h2 class="skrift" id="pamelding-tittel">Hva tar du med?</h2>
 
       <div id="min-pamelding" class="min-pamelding" hidden>
-        <p>Du er påmeldt med:</p>
+        <p>Du er påmeldt med</p>
         <p class="min-rett" id="min-rett"></p>
         <p class="hjelp">Vil du bytte rett? Slett påmeldingen og meld deg på på nytt.</p>
-        <button type="button" id="slett-min" class="knapp knapp-sekundaer">Slett påmeldingen min</button>
+        <button type="button" id="slett-min" class="knapp knapp-spokelse">Slett påmeldingen min</button>
       </div>
 
       <form id="skjema" novalidate>
-        <label class="felt">Navnet ditt
+        <label class="felt"><span>Navnet ditt</span>
           <input id="navn" type="text" autocomplete="given-name" required>
         </label>
-        <label class="felt">Retten du tar med
-          <input id="rett" type="text" autocomplete="off" required placeholder="Skriv selv eller velg et forslag under">
+        <label class="felt"><span>Retten du tar med</span>
+          <input id="rett" type="text" autocomplete="off" required placeholder="F.eks. patatas bravas">
         </label>
         <p id="varsel" class="varsel" role="alert" hidden></p>
-        <label class="felt">Kategori
+        <label class="felt"><span>Kategori</span>
           <select id="kategori" required>
             <option value="" selected disabled>Velg kategori</option>
           </select>
@@ -58,28 +76,23 @@
       </form>
     </section>
 
-    <!-- Forslag -->
-    <section class="kort" aria-labelledby="forslag-tittel">
-      <div class="kort-topp">
-        <h2 id="forslag-tittel">Ledige forslag</h2>
-        <span id="forslag-antall" class="hjelp"></span>
-      </div>
-      <p class="hjelp">Trykk på et forslag for å fylle det inn i skjemaet.</p>
+    <!-- Forslag (vises bare når det finnes forslag i config.js) -->
+    <section class="papir" id="forslag-seksjon" aria-labelledby="forslag-tittel" hidden>
+      <h2 class="skrift" id="forslag-tittel">Ledige forslag</h2>
+      <p class="hjelp midt">Trykk på et forslag for å fylle det inn i skjemaet. <span id="forslag-antall"></span></p>
       <div id="forslag"></div>
     </section>
 
     <!-- Oversikt -->
-    <section class="kort" aria-labelledby="oversikt-tittel">
-      <div class="kort-topp">
-        <h2 id="oversikt-tittel">Hvem tar med hva</h2>
-        <span id="totalt" class="hjelp"></span>
-      </div>
+    <section class="tavle" aria-labelledby="oversikt-tittel">
+      <h2 class="tavle-tittel" id="oversikt-tittel">Tapasbordet</h2>
+      <p class="tavle-under" id="totalt"></p>
       <ul id="tellere" class="tellere"></ul>
       <div id="oversikt"></div>
     </section>
   </main>
 
-  <footer class="wrap">God jul! 🎄</footer>
+  <footer>God jul og vel møtt! ✦</footer>
 
   <script src="config.js"></script>
   <script type="module" src="script.js"></script>
