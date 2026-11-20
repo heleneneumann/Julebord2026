@@ -1,1 +1,68 @@
-<h1>Test</h1>
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Julebord 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Oversikt</p>
+      <h1 id="tittel">Julebord</h1>
+      <p id="beskrivelse" class="lead"></p>
+      <div class="facts">
+        <div class="fact"><span class="fact-label">Dato</span><span id="dato" class="fact-value"></span></div>
+        <div class="fact"><span class="fact-label">Sted</span><span id="sted" class="fact-value"></span></div>
+        <div class="fact"><span class="fact-label">Nedtelling</span><span id="nedtelling" class="fact-value"></span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section aria-labelledby="oppgaver-tittel">
+      <div class="section-head">
+        <h2 id="oppgaver-tittel">Oppgaver og frister</h2>
+        <p id="fremdrift" class="muted"></p>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="fremdrift-bar" class="progress-bar"></div></div>
+
+      <div class="controls">
+        <label>Kategori
+          <select id="filter-kategori"><option value="">Alle</option></select>
+        </label>
+        <label>Status
+          <select id="filter-status">
+            <option value="">Alle</option>
+            <option value="aktive">Ikke ferdig</option>
+            <option value="Ikke startet">Ikke startet</option>
+            <option value="Pågår">Pågår</option>
+            <option value="Ferdig">Ferdig</option>
+          </select>
+        </label>
+        <label>Sorter
+          <select id="sortering">
+            <option value="frist-stigende">Frist (tidligst først)</option>
+            <option value="frist-synkende">Frist (senest først)</option>
+            <option value="kategori">Kategori</option>
+          </select>
+        </label>
+      </div>
+
+      <ul id="oppgaveliste" class="tasks"></ul>
+      <p id="tom" class="muted empty" hidden>Ingen oppgaver passer filteret.</p>
+    </section>
+
+    <section aria-labelledby="program-tittel">
+      <h2 id="program-tittel">Program for kvelden</h2>
+      <ol id="program" class="timeline"></ol>
+    </section>
+  </main>
+
+  <footer class="wrap muted">Sist oppdatert via data.js</footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
