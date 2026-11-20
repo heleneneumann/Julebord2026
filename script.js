@@ -22,7 +22,7 @@ let db = null;
 let fb = null;            // Firebase-funksjoner (ref, set, remove)
 let minUid = null;        // Anonym ID for denne nettleseren
 let tilkoblet = false;
-let pameldinger = {};     // uid -> { navn, rett }
+let pameldinger = {};     // uid -> { navn, rett, kategori }
 
 // ---------------------------------------------------------------------
 //  Sammenligning av retter
@@ -133,7 +133,26 @@ function visMelding(tekst, feil) {
 //  Skjema
 // ---------------------------------------------------------------------
 
+const kategoriFraId = Object.fromEntries(KATEGORIER.map((k) => [k.id, k]));
+let valgtKategori = "";
+
 function byggSkjema() {
+  const boks = $("kategorier");
+  KATEGORIER.forEach((k) => {
+    const lab = el("label", "kategori-valg");
+    const radio = el("input");
+    radio.type = "radio";
+    radio.name = "kategori";
+    radio.value = k.id;
+    radio.addEventListener("change", () => {
+      valgtKategori = k.id;
+      visMelding("");
+      visForslag();
+    });
+    lab.append(radio, el("span", null, k.navn));
+    boks.appendChild(lab);
+  });
+
   $("navn").maxLength = MAKS_NAVN;
   $("rett").maxLength = MAKS_RETT;
   $("rett").addEventListener("input", () => { visMelding(""); sjekkDuplikat(); });
@@ -162,8 +181,7 @@ function velgForslag(rett) {
   $("rett").value = rett;
   visMelding("");
   sjekkDuplikat();
-  $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
-  if (!$("navn").value.trim()) setTimeout(() => $("navn").focus({ preventScroll: true }), 300);
+  if (!$("navn").value.trim()) $("navn").focus();
 }
 
 const ryddTekst = (t) => t.trim().replace(/\s+/g, " ");
@@ -176,16 +194,19 @@ async function sendInn(e) {
   const rett = ryddTekst($("rett").value);
 
   if (!navn) return visMelding("Skriv inn navnet ditt.", true);
-  if (!rett) return visMelding("Skriv inn hvilken rett du tar med.", true);
+  if (!kategoriFraId[valgtKategori]) return visMelding("Velg en kategori.", true);
+  if (!rett) return visMelding("Velg et forslag eller skriv inn hvilken rett du tar med.", true);
   if (sjekkDuplikat()) return;
 
-  const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT) };
+  const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT), kategori: valgtKategori };
 
   $("send").disabled = true;
   try {
     await fb.set(fb.ref(db, `pameldinger/${minUid}`), data);
     $("skjema").reset();
+    valgtKategori = "";
     visMelding("");
+    visForslag();
     $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     console.error(err);
@@ -217,29 +238,42 @@ function visMinPamelding() {
   if (min) $("min-rett").textContent = min.rett;
 }
 
+// Viser ledige forslag for kategorien som er valgt i skjemaet
 function visForslag() {
-  $("forslag-seksjon").hidden = FORSLAG.length === 0;
-  if (!FORSLAG.length) return;
-  const boks = $("forslag");
-  boks.replaceChildren();
-  const harMeldtSeg = !!(minUid && pameldinger[minUid]);
-  const ledige = FORSLAG.filter((rett) => !finnTatt(rett));
+  const k = kategoriFraId[valgtKategori];
+  const boks = $("forslag-boks");
+  boks.hidden = !k;
+  if (!k) return;
 
-  if (!ledige.length) {
-    boks.appendChild(el("p", "tom", "Alle forslagene er tatt – finn gjerne på noe eget!"));
-  } else {
-    const chips = el("div", "chips");
-    ledige.forEach((rett) => {
-      const b = el("button", "chip", rett);
-      b.type = "button";
-      b.disabled = harMeldtSeg;
-      b.addEventListener("click", () => velgForslag(rett));
-      chips.appendChild(b);
-    });
-    boks.appendChild(chips);
+  const liste = $("forslag");
+  liste.replaceChildren();
+  const ledige = (k.forslag || []).filter((rett) => !finnTatt(rett));
+
+  $("forslag-tittel").textContent = ledige.length
+    ? `Forslag til ${k.navn.toLowerCase()} – trykk for å velge, eller skriv din egen:`
+    : `Alle forslagene til ${k.navn.toLowerCase()} er tatt – skriv gjerne inn din egen:`;
+
+  ledige.forEach((rett) => {
+    const b = el("button", "chip", rett);
+    b.type = "button";
+    b.addEventListener("click", () => velgForslag(rett));
+    liste.appendChild(b);
+  });
+}
+
+function lagLapp(p, nr) {
+  const li = el("li", "lapp");
+  li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
+  li.appendChild(el("span", "lapp-rett", p.rett));
+  li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
+  if (p.uid === minUid) {
+    li.classList.add("min");
+    const slett = el("button", "slett-lenke", "Slett");
+    slett.type = "button";
+    slett.addEventListener("click", slettMin);
+    li.appendChild(slett);
   }
-
-  $("forslag-antall").textContent = `(${ledige.length} av ${FORSLAG.length} ledige)`;
+  return li;
 }
 
 function visOversikt() {
@@ -253,23 +287,22 @@ function visOversikt() {
     return;
   }
 
-  alle.sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
-  const ul = el("ul", "lapper");
-  alle.forEach((p, nr) => {
-    const li = el("li", "lapp");
-    li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
-    li.appendChild(el("span", "lapp-rett", p.rett));
-    li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
-    if (p.uid === minUid) {
-      li.classList.add("min");
-      const slett = el("button", "slett-lenke", "Slett");
-      slett.type = "button";
-      slett.addEventListener("click", slettMin);
-      li.appendChild(slett);
-    }
-    ul.appendChild(li);
+  // Påmeldinger uten gyldig kategori havner under "Annet"
+  const grupper = [...KATEGORIER, { id: "", navn: "Annet" }];
+  grupper.forEach((k) => {
+    const i = alle
+      .filter((p) => (kategoriFraId[p.kategori] ? p.kategori : "") === k.id)
+      .sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
+    if (!i.length) return;
+    const gruppe = el("div", "kategori");
+    const h = el("h3", "kategori-navn", k.navn);
+    h.appendChild(el("span", "kategori-antall", String(i.length)));
+    gruppe.appendChild(h);
+    const ul = el("ul", "lapper");
+    i.forEach((p, nr) => ul.appendChild(lagLapp(p, nr)));
+    gruppe.appendChild(ul);
+    boks.appendChild(gruppe);
   });
-  boks.appendChild(ul);
 }
 
 function visAlt() {

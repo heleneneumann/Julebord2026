@@ -57,20 +57,21 @@
         <label class="felt"><span>Navnet ditt</span>
           <input id="navn" type="text" autocomplete="given-name" required>
         </label>
+        <fieldset class="felt">
+          <legend>Kategori</legend>
+          <div id="kategorier" class="kategorier"></div>
+        </fieldset>
+        <div id="forslag-boks" class="forslag-boks" hidden>
+          <p id="forslag-tittel" class="hjelp"></p>
+          <div id="forslag" class="chips"></div>
+        </div>
         <label class="felt"><span>Retten du tar med</span>
-          <input id="rett" type="text" autocomplete="off" required placeholder="F.eks. patatas bravas">
+          <input id="rett" type="text" autocomplete="off" required placeholder="Velg et forslag eller skriv selv">
         </label>
         <p id="varsel" class="varsel" role="alert" hidden></p>
         <p id="melding" class="melding" role="status" hidden></p>
         <button id="send" type="submit" class="knapp">Meld på retten</button>
       </form>
-    </section>
-
-    <!-- Forslag (vises bare når det finnes forslag i config.js) -->
-    <section class="papir" id="forslag-seksjon" aria-labelledby="forslag-tittel" hidden>
-      <h2 class="skrift" id="forslag-tittel">Ledige forslag</h2>
-      <p class="hjelp midt">Trykk på et forslag for å fylle det inn i skjemaet. <span id="forslag-antall"></span></p>
-      <div id="forslag"></div>
     </section>
 
     <!-- Oversikt -->

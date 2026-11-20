@@ -8,7 +8,7 @@ Database (gratis) til felles lagring.
 
 | Fil                   | Innhold                                                        |
 |-----------------------|----------------------------------------------------------------|
-| `config.js`           | **Det du endrer:** dato/tid/sted, Firebase-config og forslag |
+| `config.js`           | **Det du endrer:** dato/tid/sted, Firebase-config, kategorier og forslag |
 | `database.rules.json` | Sikkerhetsreglene du limer inn i Firebase                      |
 | `index.html`          | Strukturen på siden                                            |
 | `style.css`           | Utseende                                                       |
@@ -24,7 +24,8 @@ tid:  "18:30",        // TT:MM
 sted: "Festsalen, Storgata 1",
 ```
 
-Forslagslisten (`FORSLAG`) ligger i samme fil. Legg til en linje for å lage et nytt forslag.
+Kategoriene og forslagene ligger i `KATEGORIER` i samme fil. Hver kategori har en liste
+`forslag` – legg til en linje i anførselstegn for å lage et nytt forslag.
 
 ## 2. Sette opp Firebase (ca. 10 minutter)
 
@@ -53,7 +54,8 @@ Den brukes for at hver gjest bare skal kunne slette sin egen påmelding. Gjesten
 Reglene sørger for at:
 - bare besøkende via siden (med anonym innlogging) kan lese listen,
 - hver person bare kan opprette, endre eller slette **sin egen** påmelding,
-- bare feltene `navn` (maks 40 tegn) og `rett` (maks 60 tegn) kan lagres. Alt annet avvises.
+- bare feltene `navn` (maks 40 tegn), `rett` (maks 60 tegn) og `kategori` (én av de seks)
+  kan lagres. Alt annet avvises.
 
 **e) Hent config og lim den inn**
 1. Trykk tannhjulet ved **Project Overview → Project settings**.
@@ -97,4 +99,6 @@ beskytter dataene.
   påmelding. Da kan du slette den manuelt i Firebase-konsollen (Realtime Database → Data →
   `pameldinger`, hold musen over oppføringen og trykk **✕**).
 - **Navnene er synlige** for alle som har lenken. Be gjestene bruke bare fornavn.
+- Hvis du endrer en kategori-`id` i `config.js`, må du også endre den i
+  `database.rules.json` og publisere reglene på nytt.
 - Når julebordet er over, kan du slette dataene eller hele prosjektet i Firebase-konsollen.
