@@ -29,7 +29,7 @@ const FIREBASE_CONFIG = {
 //    "Patatas bravas",
 //    "Gambas al ajillo",
 const FORSLAG = [
-  "Focaccia",
+  "Focaccia med aioli",
   "Ostefat",
   "Kjøttboller i tomatsaus",
   "Baconsurrede dadler",
