@@ -108,6 +108,7 @@ header, main, footer { position: relative; z-index: 1; }
 .detaljer span { display: block; }
 .detaljer span:empty { display: none; }
 
+.hilsen:empty { display: none; }
 .hilsen {
   margin-top: 22px !important;
   font-family: var(--skrift);
