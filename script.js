@@ -44,7 +44,7 @@ function normaliser(tekst) {
 
 function stamme(ord) {
   if (ord.length <= 4) return ord;
-  for (const endelse of ["ene", "er", "en", "s", "e"]) {
+  for (const endelse of ["ene", "er", "en", "et", "s", "e"]) {
     if (ord.endsWith(endelse) && ord.length - endelse.length >= 3) {
       return ord.slice(0, -endelse.length);
     }
@@ -57,6 +57,23 @@ function finnTatt(rett) {
   if (!n) return null;
   for (const [uid, p] of Object.entries(pameldinger)) {
     if (normaliser(p.rett) === n) return { uid, ...p };
+  }
+  return null;
+}
+
+// Småord som ikke alene skal gi treff på "lignende rett"
+const SMAAORD = new Set(["med", "og", "i", "pa", "på", "a", "al", "de", "con", "en", "et", "til"]);
+
+// Finner en påmeldt rett der den ene inneholder den andre som hele ord,
+// f.eks. "Focaccia" og "Focaccia med aioli". Gir ikke treff på helt like retter.
+function finnLignende(rett) {
+  const n = normaliser(rett);
+  if (!n) return null;
+  const inneholder = (lang, kort) =>
+    kort.split(" ").some((ord) => !SMAAORD.has(ord)) && (" " + lang + " ").includes(" " + kort + " ");
+  for (const [uid, p] of Object.entries(pameldinger)) {
+    const m = normaliser(p.rett);
+    if (m !== n && (inneholder(m, n) || inneholder(n, m))) return { uid, ...p };
   }
   return null;
 }
@@ -174,6 +191,15 @@ function sjekkDuplikat() {
     varsel.textContent = `Denne retten er allerede tatt av ${tatt.navn}${meg}. Velg en annen rett.`;
   }
   varsel.hidden = !tatt;
+
+  const lignende = tatt ? null : finnLignende($("rett").value);
+  const likner = $("likner");
+  if (lignende) {
+    const meg = lignende.uid === minUid ? " (deg)" : "";
+    likner.textContent = `Ligner på «${lignende.rett}», som ${lignende.navn}${meg} tar med. Sjekk at det ikke er samme rett.`;
+  }
+  likner.hidden = !lignende;
+
   oppdaterKnapp();
   return tatt;
 }
@@ -202,6 +228,8 @@ async function sendInn(e) {
   if (!kategoriFraId[valgtKategori]) return visMelding("Velg en kategori.", true);
   if (!rett) return visMelding("Velg et forslag eller skriv inn hvilken rett du tar med.", true);
   if (sjekkDuplikat()) return;
+  const lignende = finnLignende(rett);
+  if (lignende && !confirm(`«${rett}» ligner på «${lignende.rett}», som ${lignende.navn} tar med.\n\nVil du melde på retten likevel?`)) return;
 
   const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT), kategori: valgtKategori };
 
