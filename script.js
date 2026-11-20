@@ -18,13 +18,12 @@ function el(tag, klasse, tekst) {
 }
 
 const kategoriFraId = Object.fromEntries(KATEGORIER.map((k) => [k.id, k]));
-const allergenNavn = Object.fromEntries(ALLERGENER.map((a) => [a.id, a.navn]));
 
 let db = null;
 let fb = null;            // Firebase-funksjoner (ref, set, remove)
 let minUid = null;        // Anonym ID for denne nettleseren
 let tilkoblet = false;
-let pameldinger = {};     // uid -> { navn, rett, kategori, allergener }
+let pameldinger = {};     // uid -> { navn, rett, kategori }
 
 // ---------------------------------------------------------------------
 //  Sammenligning av retter
@@ -143,17 +142,6 @@ function byggSkjema() {
     velg.appendChild(o);
   });
 
-  const boks = $("allergener");
-  ALLERGENER.forEach((a) => {
-    const lab = el("label", "sjekk");
-    const cb = el("input");
-    cb.type = "checkbox";
-    cb.name = "allergen";
-    cb.value = a.id;
-    lab.append(cb, el("span", null, a.navn));
-    boks.appendChild(lab);
-  });
-
   $("navn").maxLength = MAKS_NAVN;
   $("rett").maxLength = MAKS_RETT;
   $("rett").addEventListener("input", () => { visMelding(""); sjekkDuplikat(); });
@@ -181,9 +169,6 @@ function oppdaterKnapp() {
 function velgForslag(f) {
   $("rett").value = f.rett;
   $("kategori").value = f.kategori;
-  document.querySelectorAll('input[name="allergen"]').forEach((cb) => {
-    cb.checked = (f.allergener || []).includes(cb.value);
-  });
   visMelding("");
   sjekkDuplikat();
   $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -199,7 +184,6 @@ async function sendInn(e) {
   const navn = ryddTekst($("navn").value);
   const rett = ryddTekst($("rett").value);
   const kategori = $("kategori").value;
-  const valgte = [...document.querySelectorAll('input[name="allergen"]:checked')].map((cb) => cb.value);
 
   if (!navn) return visMelding("Skriv inn navnet ditt.", true);
   if (!rett) return visMelding("Skriv inn hvilken rett du tar med.", true);
@@ -207,7 +191,6 @@ async function sendInn(e) {
   if (sjekkDuplikat()) return;
 
   const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT), kategori };
-  if (valgte.length) data.allergener = Object.fromEntries(valgte.map((a) => [a, true]));
 
   $("send").disabled = true;
   try {
@@ -313,10 +296,6 @@ function visOversikt() {
       li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
       li.appendChild(el("span", "lapp-rett", p.rett));
       li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
-      const allergener = Object.keys(p.allergener || {}).filter((a) => allergenNavn[a]);
-      if (allergener.length) {
-        li.appendChild(el("span", "lapp-allergener", "Inneholder: " + allergener.map((a) => allergenNavn[a].toLowerCase()).join(", ")));
-      }
       if (p.uid === minUid) {
         li.classList.add("min");
         const slett = el("button", "slett-lenke", "Slett");

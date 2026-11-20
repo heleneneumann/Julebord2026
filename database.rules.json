@@ -16,11 +16,6 @@
         "kategori": {
           ".validate": "newData.isString() && newData.val().matches(/^(kjott|fisk|vegetar|brod|dessert)$/)"
         },
-        "allergener": {
-          "$allergen": {
-            ".validate": "$allergen.matches(/^(gluten|laktose|notter|skalldyr)$/) && newData.isBoolean() && newData.val() === true"
-          }
-        },
         "$annet": {
           ".validate": false
         }

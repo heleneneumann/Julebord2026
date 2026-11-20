@@ -195,22 +195,6 @@ select {
 input::placeholder { color: rgba(74, 10, 16, .4); }
 input:focus, select:focus { outline: 2px solid rgba(138, 21, 32, .5); outline-offset: 1px; }
 
-.allergener { display: flex; flex-wrap: wrap; gap: 8px; }
-.sjekk {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid rgba(138, 21, 32, .3);
-  border-radius: 999px;
-  background: #fffaf0;
-  cursor: pointer;
-  user-select: none;
-  font-size: .95rem;
-}
-.sjekk:has(input:checked) { background: var(--blekk); color: var(--krem); border-color: var(--blekk); }
-.sjekk input { accent-color: var(--blekk); width: 16px; height: 16px; margin: 0; }
-
 .varsel {
   margin: -4px 0 14px;
   padding: 10px 12px;
@@ -348,7 +332,6 @@ input:focus, select:focus { outline: 2px solid rgba(138, 21, 32, .5); outline-of
 }
 .lapp-rett { display: block; font-family: var(--skrift); font-style: normal; font-size: 1.6rem; line-height: 1.1; overflow-wrap: anywhere; }
 .lapp-navn { display: block; margin-top: 6px; font-size: .92rem; overflow-wrap: anywhere; }
-.lapp-allergener { display: block; margin-top: 6px; font-size: .74rem; opacity: .75; }
 .lapp.min { box-shadow: 0 0 0 2px var(--gull-lys), 0 10px 18px rgba(0, 0, 0, .35); }
 .slett-lenke {
   margin-top: 6px;

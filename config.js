@@ -34,19 +34,10 @@ const KATEGORIER = [
   { id: "dessert", navn: "Dessert",         ikon: "🍮" }
 ];
 
-// 4) Allergener man kan krysse av for (samme regel som over for id-ene).
-const ALLERGENER = [
-  { id: "gluten",   navn: "Gluten" },
-  { id: "laktose",  navn: "Laktose" },
-  { id: "notter",   navn: "Nøtter" },
-  { id: "skalldyr", navn: "Skalldyr" }
-];
-
-// 5) Forslag til retter. Står listen tom, skjules forslagsseksjonen på siden.
+// 4) Forslag til retter. Står listen tom, skjules forslagsseksjonen på siden.
 //    Legg til én linje per forslag, f.eks.:
-//    { rett: "Patatas bravas", kategori: "vegetar", allergener: [] },
-//    { rett: "Gambas al ajillo", kategori: "fisk", allergener: ["skalldyr"] },
-//    "kategori" må være en av id-ene over. "allergener" krysses av automatisk
-//    når gjesten velger forslaget (kan være tom: []).
+//    { rett: "Patatas bravas", kategori: "vegetar" },
+//    { rett: "Gambas al ajillo", kategori: "fisk" },
+//    "kategori" må være en av id-ene over.
 const FORSLAG = [
 ];

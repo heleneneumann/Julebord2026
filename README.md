@@ -8,7 +8,7 @@ Database (gratis) til felles lagring.
 
 | Fil                   | Innhold                                                        |
 |-----------------------|----------------------------------------------------------------|
-| `config.js`           | **Det du endrer:** dato/tid/sted, Firebase-config, kategorier, allergener og forslag |
+| `config.js`           | **Det du endrer:** dato/tid/sted, Firebase-config, kategorier og forslag |
 | `database.rules.json` | Sikkerhetsreglene du limer inn i Firebase                      |
 | `index.html`          | Strukturen på siden                                            |
 | `style.css`           | Utseende                                                       |
@@ -53,8 +53,8 @@ Den brukes for at hver gjest bare skal kunne slette sin egen påmelding. Gjesten
 Reglene sørger for at:
 - bare besøkende via siden (med anonym innlogging) kan lese listen,
 - hver person bare kan opprette, endre eller slette **sin egen** påmelding,
-- bare feltene `navn` (maks 40 tegn), `rett` (maks 60 tegn), `kategori` (én av de fem)
-  og `allergener` (bare de fire kjente) kan lagres. Alt annet avvises.
+- bare feltene `navn` (maks 40 tegn), `rett` (maks 60 tegn) og `kategori` (én av de fem)
+  kan lagres. Alt annet avvises.
 
 **e) Hent config og lim den inn**
 1. Trykk tannhjulet ved **Project Overview → Project settings**.
@@ -98,6 +98,6 @@ beskytter dataene.
   påmelding. Da kan du slette den manuelt i Firebase-konsollen (Realtime Database → Data →
   `pameldinger`, hold musen over oppføringen og trykk **✕**).
 - **Navnene er synlige** for alle som har lenken. Be gjestene bruke bare fornavn.
-- Hvis du endrer id-ene til kategorier eller allergener i `config.js`, må du også oppdatere
+- Hvis du endrer id-ene til kategorier i `config.js`, må du også oppdatere
   dem i `database.rules.json` og publisere reglene på nytt.
 - Når julebordet er over, kan du slette dataene eller hele prosjektet i Firebase-konsollen.
