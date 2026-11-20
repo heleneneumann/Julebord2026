@@ -22,6 +22,7 @@ let db = null;
 let fb = null;            // Firebase-funksjoner (ref, set, remove)
 let minUid = null;        // Anonym ID for denne nettleseren
 let tilkoblet = false;
+let tilkoblingFeilet = false;
 let pameldinger = {};     // uid -> { navn, rett, kategori }
 
 // ---------------------------------------------------------------------
@@ -120,6 +121,10 @@ function visStatus(tekst, feil) {
   s.textContent = tekst;
   s.classList.toggle("feil", !!feil);
   s.hidden = false;
+  if (feil) {
+    tilkoblingFeilet = true;
+    visOversikt();
+  }
 }
 
 function visMelding(tekst, feil) {
@@ -283,7 +288,10 @@ function visOversikt() {
   const boks = $("oversikt");
   boks.replaceChildren();
   if (!alle.length) {
-    boks.appendChild(el("p", "tom", tilkoblet ? "Ingen har meldt seg på ennå. Bli den første!" : "Laster påmeldinger …"));
+    const tekst = tilkoblet ? "Ingen har meldt seg på ennå. Bli den første!"
+      : tilkoblingFeilet ? "Påmeldingene kan ikke vises akkurat nå. Prøv å laste inn siden på nytt."
+      : "Laster påmeldinger …";
+    boks.appendChild(el("p", "tom", tekst));
     return;
   }
 
