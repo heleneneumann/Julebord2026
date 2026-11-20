@@ -90,8 +90,9 @@ beskytter dataene.
 
 ## Greit å vite
 
-- **Test lokalt:** siden må åpnes via en webserver, ikke ved å dobbeltklikke på
-  `index.html`. Kjør `python3 -m http.server` i mappen og åpne <http://localhost:8000>.
+- **Test lokalt:** du kan åpne `index.html` direkte i nettleseren for å se design og
+  nedtelling. Firebase-delen (påmelding) fungerer best via GitHub Pages, eller med
+  `python3 -m http.server` i mappen og <http://localhost:8000>.
 - **Én påmelding per nettleser:** påmeldingen er knyttet til nettleseren den ble laget i.
   Hvis noen bytter telefon eller tømmer nettleserdata, kan de ikke lenger slette sin egen
   påmelding. Da kan du slette den manuelt i Firebase-konsollen (Realtime Database → Data →

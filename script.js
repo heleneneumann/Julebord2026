@@ -1,6 +1,9 @@
 // Logikken for siden. Innstillinger og tekster ligger i config.js.
 // Firebase lastes fra Googles CDN – ingen installasjon nødvendig.
 
+(() => {
+"use strict";
+
 const FIREBASE_VERSJON = "10.12.2";
 const MAKS_NAVN = 40;  // må stemme med database.rules.json
 const MAKS_RETT = 60;  // må stemme med database.rules.json
@@ -445,3 +448,4 @@ visInfo();
 byggSkjema();
 visAlt();
 kobleTil();
+})();
