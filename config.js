@@ -24,20 +24,9 @@ const FIREBASE_CONFIG = {
   appId: "LIM-INN-HER"
 };
 
-// 3) Kategorier. Hvis du endrer id-ene her, må du også endre dem i
-//    database.rules.json (linjen med "kategori").
-const KATEGORIER = [
-  { id: "kjott",   navn: "Kjøtt",           ikon: "🥩" },
-  { id: "fisk",    navn: "Fisk og sjømat",  ikon: "🦐" },
-  { id: "vegetar", navn: "Vegetar",         ikon: "🥕" },
-  { id: "brod",    navn: "Brød og tilbehør", ikon: "🥖" },
-  { id: "dessert", navn: "Dessert",         ikon: "🍮" }
-];
-
-// 4) Forslag til retter. Står listen tom, skjules forslagsseksjonen på siden.
-//    Legg til én linje per forslag, f.eks.:
-//    { rett: "Patatas bravas", kategori: "vegetar" },
-//    { rett: "Gambas al ajillo", kategori: "fisk" },
-//    "kategori" må være en av id-ene over.
+// 3) Forslag til retter. Står listen tom, skjules forslagsseksjonen på siden.
+//    Skriv ett forslag per linje i anførselstegn, med komma etter, f.eks.:
+//    "Patatas bravas",
+//    "Gambas al ajillo",
 const FORSLAG = [
 ];

@@ -17,13 +17,12 @@ function el(tag, klasse, tekst) {
   return e;
 }
 
-const kategoriFraId = Object.fromEntries(KATEGORIER.map((k) => [k.id, k]));
 
 let db = null;
 let fb = null;            // Firebase-funksjoner (ref, set, remove)
 let minUid = null;        // Anonym ID for denne nettleseren
 let tilkoblet = false;
-let pameldinger = {};     // uid -> { navn, rett, kategori }
+let pameldinger = {};     // uid -> { navn, rett }
 
 // ---------------------------------------------------------------------
 //  Sammenligning av retter
@@ -135,13 +134,6 @@ function visMelding(tekst, feil) {
 // ---------------------------------------------------------------------
 
 function byggSkjema() {
-  const velg = $("kategori");
-  KATEGORIER.forEach((k) => {
-    const o = el("option", null, `${k.ikon} ${k.navn}`);
-    o.value = k.id;
-    velg.appendChild(o);
-  });
-
   $("navn").maxLength = MAKS_NAVN;
   $("rett").maxLength = MAKS_RETT;
   $("rett").addEventListener("input", () => { visMelding(""); sjekkDuplikat(); });
@@ -166,9 +158,8 @@ function oppdaterKnapp() {
   $("send").disabled = !tilkoblet || !$("varsel").hidden;
 }
 
-function velgForslag(f) {
-  $("rett").value = f.rett;
-  $("kategori").value = f.kategori;
+function velgForslag(rett) {
+  $("rett").value = rett;
   visMelding("");
   sjekkDuplikat();
   $("pamelding").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -183,14 +174,12 @@ async function sendInn(e) {
 
   const navn = ryddTekst($("navn").value);
   const rett = ryddTekst($("rett").value);
-  const kategori = $("kategori").value;
 
   if (!navn) return visMelding("Skriv inn navnet ditt.", true);
   if (!rett) return visMelding("Skriv inn hvilken rett du tar med.", true);
-  if (!kategoriFraId[kategori]) return visMelding("Velg en kategori.", true);
   if (sjekkDuplikat()) return;
 
-  const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT), kategori };
+  const data = { navn: navn.slice(0, MAKS_NAVN), rett: rett.slice(0, MAKS_RETT) };
 
   $("send").disabled = true;
   try {
@@ -225,10 +214,7 @@ function visMinPamelding() {
   const min = minUid && pameldinger[minUid];
   $("skjema").hidden = !!min;
   $("min-pamelding").hidden = !min;
-  if (min) {
-    const k = kategoriFraId[min.kategori];
-    $("min-rett").textContent = min.rett;
-  }
+  if (min) $("min-rett").textContent = min.rett;
 }
 
 function visForslag() {
@@ -237,44 +223,28 @@ function visForslag() {
   const boks = $("forslag");
   boks.replaceChildren();
   const harMeldtSeg = !!(minUid && pameldinger[minUid]);
-  let ledige = 0;
+  const ledige = FORSLAG.filter((rett) => !finnTatt(rett));
 
-  KATEGORIER.forEach((k) => {
-    const liste = FORSLAG.filter((f) => f.kategori === k.id && !finnTatt(f.rett));
-    ledige += liste.length;
-    const gruppe = el("div", "gruppe");
-    gruppe.appendChild(el("h3", null, `${k.ikon} ${k.navn}`));
-    if (!liste.length) {
-      gruppe.appendChild(el("p", "tom", "Alle forslagene her er tatt – finn gjerne på noe eget!"));
-    } else {
-      const chips = el("div", "chips");
-      liste.forEach((f) => {
-        const b = el("button", "chip", f.rett);
-        b.type = "button";
-        b.disabled = harMeldtSeg;
-        b.addEventListener("click", () => velgForslag(f));
-        chips.appendChild(b);
-      });
-      gruppe.appendChild(chips);
-    }
-    boks.appendChild(gruppe);
-  });
+  if (!ledige.length) {
+    boks.appendChild(el("p", "tom", "Alle forslagene er tatt – finn gjerne på noe eget!"));
+  } else {
+    const chips = el("div", "chips");
+    ledige.forEach((rett) => {
+      const b = el("button", "chip", rett);
+      b.type = "button";
+      b.disabled = harMeldtSeg;
+      b.addEventListener("click", () => velgForslag(rett));
+      chips.appendChild(b);
+    });
+    boks.appendChild(chips);
+  }
 
-  $("forslag-antall").textContent = `(${ledige} av ${FORSLAG.length} ledige)`;
+  $("forslag-antall").textContent = `(${ledige.length} av ${FORSLAG.length} ledige)`;
 }
 
 function visOversikt() {
   const alle = Object.entries(pameldinger).map(([uid, p]) => ({ uid, ...p }));
   $("totalt").textContent = `${alle.length} ${alle.length === 1 ? "rett" : "retter"} påmeldt`;
-
-  const tellere = $("tellere");
-  tellere.replaceChildren();
-  KATEGORIER.forEach((k) => {
-    const antall = alle.filter((p) => p.kategori === k.id).length;
-    const li = el("li", null, `${k.ikon} ${k.navn} `);
-    li.appendChild(el("b", null, String(antall)));
-    tellere.appendChild(li);
-  });
 
   const boks = $("oversikt");
   boks.replaceChildren();
@@ -283,31 +253,23 @@ function visOversikt() {
     return;
   }
 
-  KATEGORIER.forEach((k) => {
-    const i = alle
-      .filter((p) => p.kategori === k.id)
-      .sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
-    if (!i.length) return;
-    const gruppe = el("div", "kategori");
-    gruppe.appendChild(el("h3", "kategori-navn", k.navn));
-    const ul = el("ul", "lapper");
-    i.forEach((p, nr) => {
-      const li = el("li", "lapp");
-      li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
-      li.appendChild(el("span", "lapp-rett", p.rett));
-      li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
-      if (p.uid === minUid) {
-        li.classList.add("min");
-        const slett = el("button", "slett-lenke", "Slett");
-        slett.type = "button";
-        slett.addEventListener("click", slettMin);
-        li.appendChild(slett);
-      }
-      ul.appendChild(li);
-    });
-    gruppe.appendChild(ul);
-    boks.appendChild(gruppe);
+  alle.sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
+  const ul = el("ul", "lapper");
+  alle.forEach((p, nr) => {
+    const li = el("li", "lapp");
+    li.style.setProperty("--d", `${-((nr * 1.7) % 5)}s`); // lappene svinger litt i utakt
+    li.appendChild(el("span", "lapp-rett", p.rett));
+    li.appendChild(el("span", "lapp-navn", p.uid === minUid ? `${p.navn} (deg)` : p.navn));
+    if (p.uid === minUid) {
+      li.classList.add("min");
+      const slett = el("button", "slett-lenke", "Slett");
+      slett.type = "button";
+      slett.addEventListener("click", slettMin);
+      li.appendChild(slett);
+    }
+    ul.appendChild(li);
   });
+  boks.appendChild(ul);
 }
 
 function visAlt() {
