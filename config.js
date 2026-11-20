@@ -5,8 +5,8 @@
 // 1) Informasjon om julebordet
 const JULEBORD = {
   tittel: "Julebord med tapas",
-  dato: "[DATO]",   // Skriv på formen ÅÅÅÅ-MM-DD, f.eks. "2026-12-12"
-  tid: "[TID]",     // Skriv på formen TT:MM, f.eks. "18:30"
+  dato: "2026-12-27",   // Skriv på formen ÅÅÅÅ-MM-DD, f.eks. "2026-12-12"
+  tid: "18:00",         // Skriv på formen TT:MM, f.eks. "18:30"
   sted: "[STED]",   // F.eks. "Hos Kari, Storgata 1"
   intro: "Alle tar med én tapasrett. Se hva som er ledig, og meld på din rett!"
 };
