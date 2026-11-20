@@ -34,4 +34,5 @@ const FORSLAG = [
   "Kjøttboller i tomatsaus",
   "Baconsurrede dadler",
   "Kyllingspyd",
+  "Patatas bravas",
 ];
