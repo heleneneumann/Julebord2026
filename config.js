@@ -38,7 +38,6 @@ const KATEGORIER = [
       "Baconsurrede dadler",
       "Kyllingspyd",
       "Spekeskinke med melon",
-      "Salamiruller med kremost",
       "Medisterkaker",
       "Julepølse",
     ]
