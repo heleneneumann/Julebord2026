@@ -40,6 +40,7 @@ const KATEGORIER = [
       "Spekeskinke med melon",
       "Chorizo i rødvin",
       "Salamiruller med kremost",
+      "Medisterkaker",
     ]
   },
   {
