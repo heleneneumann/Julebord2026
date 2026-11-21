@@ -56,7 +56,6 @@ const KATEGORIER = [
     forslag: [
       "Focaccia med aioli",
       "Bruschetta",
-      "Pan con tomate",
       "Grissini",
     ]
   },
