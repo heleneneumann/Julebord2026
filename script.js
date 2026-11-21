@@ -267,6 +267,7 @@ async function slettMin() {
 function visMinPamelding() {
   const min = minUid && pameldinger[minUid];
   $("skjema").hidden = !!min;
+  $("pamelding-intro").hidden = !!min;
   $("min-pamelding").hidden = !min;
   if (min) $("min-rett").textContent = min.rett;
 }
@@ -283,7 +284,7 @@ function visForslag() {
   const ledige = (k.forslag || []).filter((rett) => !finnTatt(rett));
 
   $("forslag-tittel").textContent = ledige.length
-    ? `Forslag til ${k.navn.toLowerCase()} – trykk for å velge, eller skriv din egen:`
+    ? `Forslag til ${k.navn.toLowerCase()}:`
     : `Alle forslagene til ${k.navn.toLowerCase()} er tatt – skriv gjerne inn din egen:`;
 
   ledige.forEach((rett) => {
