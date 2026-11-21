@@ -86,6 +86,11 @@ const KATEGORIER = [
       "Patatas bravas",
       "Marinerte oliven",
       "Guacamole med nachos",
+      "Vårruller med sweet chili",
+      "Gresk salat",
+      "Couscoussalat",
+      "Grillet asparges",
+      "Pestopasta",
     ]
   },
 ];
