@@ -78,6 +78,7 @@ const KATEGORIER = [
       "Fruktspyd",
       "Minibrownies",
       "Sjokoladedyppede jordbær",
+      "Cookies",
     ]
   },
   {
