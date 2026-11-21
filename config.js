@@ -67,7 +67,6 @@ const KATEGORIER = [
       "Manchego med honning",
       "Mozzarellaspyd med tomat og basilikum",
       "Bakt brie",
-      "Fylte dadler med geitost",
     ]
   },
   {
