@@ -73,7 +73,6 @@ const KATEGORIER = [
   {
     id: "sott", navn: "Søtt",
     forslag: [
-      "Churros",
       "Sjokoladetrøfler",
       "Fruktspyd",
       "Minibrownies",
