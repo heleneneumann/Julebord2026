@@ -87,7 +87,6 @@ const KATEGORIER = [
       "Marinerte oliven",
       "Hummus",
       "Guacamole med nachos",
-      "Pimientos de padrón",
     ]
   },
 ];
