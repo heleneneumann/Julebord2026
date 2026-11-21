@@ -85,7 +85,6 @@ const KATEGORIER = [
     forslag: [
       "Patatas bravas",
       "Marinerte oliven",
-      "Hummus",
       "Guacamole med nachos",
     ]
   },
