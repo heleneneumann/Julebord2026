@@ -41,6 +41,7 @@ const KATEGORIER = [
       "Chorizo i rødvin",
       "Salamiruller med kremost",
       "Medisterkaker",
+      "Julepølse",
     ]
   },
   {
